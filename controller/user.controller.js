@@ -69,10 +69,18 @@ const userController = {
         } catch (error) {
             return res.status(500).json({ success: false, message: 'Server error' });
         }
+    },
+
+    // create login functionality
+
+    login: async (req,res)=>{
+        const {email,password} = req.body
+        const user = await User.findOne({email})
     }
 };
 
 // Functions to generate access and refresh tokens
+
 const createAccessToken = (payload) => {
     return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
 };
