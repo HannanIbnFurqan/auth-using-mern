@@ -73,21 +73,42 @@ const userController = {
 
     // create login functionality
 
-    login: async (req,res)=>{
-       try {
-        const {email,password} = req.body
-        const user = await User.findOne({email})
-        if(!user) return res.status(400).json({message: "user does not exist"})
-        const isMatch = await bcrypt.compare(password, user.password)
-       if(!isMatch) return res.status(400).json({message:"incorrect password"})
-
-        res.status(200).json({message: 'login success'})
-        
-       } catch (error) {
-         return res.status(500).json({message: error.message})
-       }
-
+    login: async (req, res) => {
+        try {
+            const { email, password } = req.body;
+            console.log("login", email, password);
+    
+            // Check if user exists
+            const user = await User.findOne({ email });
+            if (!user) {
+                return res.status(400).json({ message: "Invalid email or password" });
+            }
+    
+            // Compare the password with the hashed password in the database
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) {
+                return res.status(400).json({ message: "Invalid email or password" });
+            }
+    
+            // Optionally generate a JWT token if you're using JWT for authentication
+            const accessToken = createAccessToken({ id: user._id });
+            const refreshToken = createRefreshToken({ id: user._id });
+            res.cookie('refreshToken', refreshToken, {
+                httpOnly: true,
+                path: '/user/refresh_token'
+            });
+    
+            // Send a success response with the access token
+            res.status(200).json({
+                message: 'Login successful',
+                accessToken,
+            });
+    
+        } catch (error) {
+            return res.status(500).json({ message: error.message });
+        }
     }
+    
 };
 
 // Functions to generate access and refresh tokens
